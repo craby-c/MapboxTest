@@ -46,9 +46,13 @@ export interface IDurationFactor {
     [key: number]: number
 }
 
+export interface IDuration {
+    duration: number
+}
+
 export interface IPlace {
     point: [number, number],
     name: string
 }
 
-export type TActiveTrip = [number, number, IDurationFactor]
+export type TActiveTrip = [number, number, IDuration];

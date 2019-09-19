@@ -7,9 +7,12 @@ import { MarkerPoint } from './components/MarkerPoint';
 import { 
     ITripData,
     TCSSProperty,
+    TActiveTrip,
     IDurationFactor,
+    IDuration,
     IViewport,
-    IProps
+    IProps,
+    IPlace
 } from './Models';
 import {
     defaultDiameter,
@@ -19,13 +22,13 @@ import {
 
 interface IState {
     viewport: IViewport,
-    activeTrip: any,
+    activeTrip: TActiveTrip | [],
     data: ITripData[],
     diameters: IDurationFactor
 }
 
 class App extends Component<IProps, IState> {
-    state = {
+    state: IState = {
         viewport: defaultViewport,
         activeTrip: [],
         data: [],
@@ -47,15 +50,15 @@ class App extends Component<IProps, IState> {
             .then(response => {
                 return response.json()
             })
-            .then(data => {
+            .then((data: ITripData[]) => {
                 this.setState({
                     data: data
                 })
             })
     }
 
-    getPoints = (data: ITripData[]): Map<any, any> => {
-        let points: Map<any, any> = new Map();
+    getPoints = (data: ITripData[]): Map<number, IPlace> => {
+        let points: Map<number, IPlace> = new Map();
 
         data.forEach((trip: ITripData) => {
             const {
@@ -68,11 +71,11 @@ class App extends Component<IProps, IState> {
                 "end station name": end_name,
                 "end station id": end_id
             } = trip;
-            const start_place = {
+            const start_place: IPlace = {
                 point: [start_lat, start_lon],
                 name: start_name
             };
-            const end_place = {
+            const end_place: IPlace = {
                 point: [end_lat, end_lon],
                 name: end_name
             };
@@ -84,10 +87,10 @@ class App extends Component<IProps, IState> {
 
     renderPoints = (): JSX.Element[] => {
         const { data, activeTrip } = this.state;
-        const points: Map<any, any> = this.getPoints(data);
+        const points: Map<number, IPlace> = this.getPoints(data);
         const markers: JSX.Element[] = [];
 
-        points.forEach((value: any, key: string) => {
+        points.forEach((value: IPlace, key: number) => {
             const { point: [latitude, longitude], name } = value;
             // TODO: refactor line below
             // @ts-ignore
@@ -125,17 +128,19 @@ class App extends Component<IProps, IState> {
     }
 
     getDiameter = (): number => {
-        const { duration } = this.state.activeTrip[2];
-        const value = this.state.diameters[duration];
+        if (this.state.activeTrip[2]){
+            const { duration } = this.state.activeTrip[2];
+            const value = this.state.diameters[duration];
 
-        if (value) {
-            return value * defaultDiameter
-        } else {
-            return defaultDiameter
+            if (value) {
+                return value * defaultDiameter
+            }
         }
+
+        return defaultDiameter
     }
 
-    handleSetActiveTrip = (start: number, end: number, duration: IDurationFactor) => (): void => {
+    handleSetActiveTrip = (start: number, end: number, duration: number) => (): void => {
         this.setState({
             activeTrip: [start, end, { duration: duration }]
         })
